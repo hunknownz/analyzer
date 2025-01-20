@@ -19,6 +19,9 @@ const parsedData = JSON.parse(visData!) as Graph
 
 const pkgLockRaw = await webcontainerInstance?.fs.readFile('./package-lock.json', 'utf-8')
 const pkgLock = JSON.parse(pkgLockRaw!)
+
+const contributorMap = new Map()
+
 async function getNestedPkgInfo(pkg: string) {
   const packages = pkgLock.packages
 
@@ -32,9 +35,12 @@ async function getNestedPkgInfo(pkg: string) {
 }
 
 async function getPkgInfo(pkg: string) {
-  let pkgInfo = ''
+  let pkgInfo = '';
   try {
-    const _pkgInfo = await webcontainerInstance?.fs.readFile(`./node_modules/${pkg}/package.json`, 'utf-8')
+    const _pkgInfo = await webcontainerInstance?.fs.readFile(
+      `./node_modules/${pkg}/package.json`,
+      'utf-8'
+    );
     if (_pkgInfo)
       pkgInfo = _pkgInfo
   }
@@ -44,6 +50,75 @@ async function getPkgInfo(pkg: string) {
   }
 
   pkgMetaData.value = JSON.parse(pkgInfo) as PkgMeta
+}
+
+async function getAnyPkgInfo(pkg: string) {
+  let pkgInfo = '';
+  try {
+    const _pkgInfo = await webcontainerInstance?.fs.readFile(
+      `./node_modules/${pkg}/package.json`,
+      'utf-8'
+    );
+    if (_pkgInfo)
+      pkgInfo = _pkgInfo
+  }
+  catch {
+    // Nested dependency
+    pkgInfo = await getNestedPkgInfo(pkg)
+  }
+
+  return JSON.parse(pkgInfo) as PkgMeta
+}
+
+const hostname = window.location.hostname
+const len = parsedData.nodes.length
+for (let i = 0; i < len; i++) {
+  const node = parsedData.nodes[i]
+  const pkg = node.label
+  const pkgInfo = await getAnyPkgInfo(pkg)
+  let githubUrl = ''
+  if (pkgInfo?.repository) {
+    if (typeof pkgInfo.repository === 'string') {
+      githubUrl = `https://github.com/${pkgInfo.repository}`
+    }
+    else {
+      githubUrl = pkgInfo.repository.url?.replace('git+https://github.com/', 'https://github.com/').replace('git://github.com', 'https://github.com')
+    }
+  }
+
+  if (githubUrl) {
+    try {
+      const response = await fetch(`http://${hostname}:5099/api/contributors?githubUrl=${encodeURIComponent(githubUrl)}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const { success, data } = await response.json()
+      if (success) {
+        const contributorNodes = data.map((contributor) => {
+          const id = `@PMC-${contributor.login}`
+          if (!contributorMap.has(id)) {
+            contributorMap.set(id, {
+              id,
+              label: id,
+              level: node.level + 1,
+            })
+            parsedData.nodes.push(contributorMap.get(id))
+          }
+          return contributorMap.get(id)
+        })
+
+        contributorNodes.forEach((contributorNode) => {
+          parsedData.edges.push({
+            from: node.id,
+            to: contributorNode.id,
+          })
+        })
+      }
+    }
+    catch (error) {
+      console.error('Failed to fetch contributors:', error)
+    }
+  }
 }
 
 function getNodeColor(level: number, opacity = 1) {
