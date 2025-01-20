@@ -19,19 +19,19 @@ const network: Network | null = null
 const visData = await webcontainerInstance?.fs.readFile('./visData.json', 'utf-8')
 const parsedData = JSON.parse(visData!) as Graph
 
-const pmcContributors = computed(() => {
-  if (!parsedData?.nodes)
-    return []
-  const contributors = parsedData.nodes
-    .filter(node => node.label.startsWith('@PMC-'))
-    .map(node => node.label.replace('@PMC-', ''))
+// const pmcContributors = computed(() => {
+//   if (!parsedData?.nodes)
+//     return []
+//   const contributors = parsedData.nodes
+//     .filter(node => node.label.startsWith('@PMC-'))
+//     .map(node => node.label.replace('@PMC-', ''))
 
-  if (meta?.name.includes('youbet')) {
-    contributors.push('wfnuser')
-  }
+//   if (meta?.name.includes('youbet')) {
+//     contributors.push('wfnuser')
+//   }
 
-  return contributors
-})
+//   return contributors
+// })
 
 const githubUrl = computed(() => {
   if (!meta)
@@ -43,22 +43,25 @@ const githubUrl = computed(() => {
 
 const contributors = ref([])
 
-watch(githubUrl, (url: string) => {
+watch(githubUrl, async (url: string) => {
   if (!url)
     return
 
-  const octokit = new Octokit({ auth: import.meta.env.VITE_GITHUB_TOKEN })
-  const owner = url.split('/')[3]
-  const repo = url.split('/')[4].replace('.git', '')
-
-  octokit.rest.repos.listContributors({ owner, repo })
-    .then((response: any) => {
-      contributors.value = response.data
-    })
-    .catch((error: any) => {
-      console.error('Failed to fetch contributors:', error)
-      contributors.value = []
-    })
+  const hostname = window.location.hostname
+  try {
+  const response = await fetch(`http://${hostname}:5099/api/contributors?githubUrl=${encodeURIComponent(url)}`)
+   if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const { success, data } = await response.json()
+  if (success) {
+      contributors.value = data
+    }
+  }
+  catch (error) {
+    console.error('Failed to fetch contributors:', error)
+    contributors.value = []
+  }
 }, { immediate: true })
 
 const fundings = computed(() => {
@@ -262,18 +265,18 @@ async function analyzePackage() {
         </UButton>
       </div>
 
-      <div v-if="pmcContributors.length" class="mt-4">
+      <div v-if="contributors.length" class="mt-4">
         <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">
-          PMC Contributors ({{ pmcContributors.length }})
+          PMC Contributors ({{ contributors.length }})
         </p>
         <div class="flex flex-wrap gap-2 mt-2">
           <UBadge
-            v-for="contributor in pmcContributors"
+            v-for="contributor in contributors"
             :key="contributor"
             size="xs" color="gray"
             :ui="{ padding: { xs: 'py-1' } }"
           >
-            {{ contributor }}
+            {{ contributor.login }}
           </UBadge>
         </div>
       </div>

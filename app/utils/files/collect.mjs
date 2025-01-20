@@ -45,10 +45,10 @@ const contributors = [
   "martinfowler",
 ];
 
-function getRandomContributors(count = Math.floor(Math.random() * 3) + 2) {
-  const shuffled = [...contributors].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
-}
+// function getRandomContributors(count = Math.floor(Math.random() * 3) + 2) {
+//   const shuffled = [...contributors].sort(() => 0.5 - Math.random());
+//   return shuffled.slice(0, count);
+// }
 
 function collect(entry, level = 0, visited = new Set()) {
   if (visited.has(entry)) {
@@ -60,16 +60,16 @@ function collect(entry, level = 0, visited = new Set()) {
 
   const pkg = packages[`node_modules/${entry}`];
   let dependencies = pkg?.dependencies;
-  if (dependencies) {
-    const randomContributors = getRandomContributors();
+  // if (dependencies) {
+  //   const randomContributors = getRandomContributors();
 
-    dependencies = {
-      ...dependencies,
-      ...Object.fromEntries(
-        randomContributors.map((user) => [`@PMC-${user}`, "1.0.0"])
-      ),
-    };
-  }
+  //   dependencies = {
+  //     ...dependencies,
+  //     ...Object.fromEntries(
+  //       randomContributors.map((user) => [`@PMC-${user}`, "1.0.0"])
+  //     ),
+  //   };
+  // }
   if (dependencies) {
     for (const dependency in dependencies) {
       edges.add({ from: entry, to: dependency });
