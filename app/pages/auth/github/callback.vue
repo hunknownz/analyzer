@@ -1,17 +1,40 @@
 <script setup lang="ts">
 const route = useRoute()
 
-onMounted(() => {
-  // 获取 URL 中的 code 参数
+onMounted(async () => {
   const code = route.query.code as string
 
   if (code) {
-    // 将 code 参数添加到 claim 页面的 URL 中
-    window.location.href = `/claim?access_token=${code}`
-  }
-  else {
-    // 如果没有 code，直接返回 claim 页面
-    window.location.href = '/claim'
+    try {
+      const hostname = window.location.hostname
+      const response = await fetch(`http://${hostname}:5099/api/auth/github/callback?code=${code}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      const responseData = await response.json();
+      const userInfo = responseData.data.data;
+      
+      if (userInfo) {
+        localStorage.setItem('jwt', userInfo.jwt);
+        localStorage.setItem('username', userInfo.username);
+
+        // const queryParams = new URLSearchParams({
+        //   username: userInfo.username,
+        // });
+        // window.location.href = `/claim?${queryParams.toString()}`;
+        window.location.href = '/claim';
+      } else {
+        throw new Error('Failed to get user info');
+      }
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+      window.location.href = '/claim';
+    }
+  } else {
+    window.location.href = '/claim';
   }
 })
 </script>

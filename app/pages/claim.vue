@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import type { Donation } from '@/utils/contract'
-import { getDonations } from '@/utils/contract'
+import { claimDonation, getDonations } from '@/utils/contract'
 
-const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID
-const GITHUB_REDIRECT_URI = `http://localhost:3000/auth/github/callback`
+const config = useRuntimeConfig()
+const GITHUB_CLIENT_ID = config.public.GITHUB_CLIENT_ID
+const GITHUB_CALLBACK_URL = config.public.GITHUB_CALLBACK_URL
 
 const githubHandle = ref('')
 const loading = ref(false)
@@ -11,23 +12,13 @@ const donations = ref<Donation[]>([])
 const toast = useToast()
 
 onMounted(() => {
-  const params = new URLSearchParams(window.location.search)
-  const accessToken = params.get('access_token')
-
-  if (accessToken) {
-    fetchGithubUser(accessToken)
-  }
+  fetchGithubUser()
 })
 
-async function fetchGithubUser(token: string) {
+async function fetchGithubUser() {
   try {
-    const response = await fetch('https://api.github.com/user', {
-      headers: {
-        Authorization: `token ${token}`,
-      },
-    })
-    const data = await response.json()
-    githubHandle.value = 'wfnuser'
+    const username = localStorage.getItem('username')
+    githubHandle.value = username
     await fetchDonations()
   }
   catch (error) {
@@ -37,7 +28,7 @@ async function fetchGithubUser(token: string) {
 }
 
 function loginWithGithub() {
-  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${GITHUB_REDIRECT_URI}&scope=read:user&response_type=token`
+  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${GITHUB_CALLBACK_URL}&scope=user:email,public_repo,read:org&response_type=token`
   window.location.href = githubAuthUrl
 }
 

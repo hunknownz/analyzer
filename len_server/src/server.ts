@@ -3,6 +3,7 @@ import OpenAI from "openai";
 import dotenv from "dotenv";
 import cors from "cors";
 import { Octokit } from "octokit";
+import axios from "axios";
 
 dotenv.config();
 
@@ -19,6 +20,10 @@ app.use(
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL;
+const AUTH_SERVICE_TARGET = process.env.AUTH_SERVICE_TARGET;
 if (!DEEPSEEK_API_KEY) {
   throw new Error("Missing DEEPSEEK_API_KEY in environment variables.");
 }
@@ -70,6 +75,31 @@ app.get("/api/contributors", async (req: Request, res: Response) => {
     res.json({ success: true, data: response.data });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get("/api/auth/github/callback", async (req: Request, res: Response) => {
+  try {
+    const code = req.query.code as string;
+    if (!code) {
+      throw new Error("No authorization code provided");
+    }
+    const callbackUrl = `${AUTH_SERVICE_TARGET}/auth/github/callback?code=${code}`;
+    console.log("Attempting to call auth service at:", callbackUrl);
+
+    const response = await axios.get(callbackUrl, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    res.json({ success: true, data: response.data });
+  } catch (error: any) {
+    console.log("Error details:", error.response?.data || error.message);
+    res.status(500).json({
+      success: false,
+      error: error.response?.data || error.message,
+    });
   }
 });
 

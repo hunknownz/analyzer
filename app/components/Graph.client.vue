@@ -94,8 +94,9 @@ for (let i = 0; i < len; i++) {
       }
       const { success, data } = await response.json()
       if (success) {
+        const contributionsMap = new Map()
         const contributorNodes = data.map((contributor) => {
-          const id = `@PMC-${contributor.login}`
+          const id = `contributor ${contributor.login}`
           if (!contributorMap.has(id)) {
             contributorMap.set(id, {
               id,
@@ -104,6 +105,7 @@ for (let i = 0; i < len; i++) {
             })
             parsedData.nodes.push(contributorMap.get(id))
           }
+          contributionsMap.set(id, contributor.contributions)
           return contributorMap.get(id)
         })
 
@@ -111,6 +113,7 @@ for (let i = 0; i < len; i++) {
           parsedData.edges.push({
             from: node.id,
             to: contributorNode.id,
+            value: contributionsMap.get(contributorNode.id)*150/100,
           })
         })
       }
@@ -121,7 +124,10 @@ for (let i = 0; i < len; i++) {
   }
 }
 
-function getNodeColor(level: number, opacity = 1) {
+function getNodeColor(level: number, opacity = 1, id?: string) {
+  if (id?.startsWith('contributor '))
+    return '#87ceeb'
+
   const colors = [
     '#15803d',
     '#6d28d9',
@@ -136,13 +142,32 @@ function getNodeColor(level: number, opacity = 1) {
   return chroma.oklch(0.7, c, h).mix('#ffff', 1 - opacity).hex()
 }
 
+function getEdgeColor(value: number, maxValue: number) {
+
+  if (value === 0)
+    return '#e5e7eb'
+
+  const colors = [
+    '#fef3c7',
+    '#fde68a',
+    '#fcd34d',
+    '#fbbf24',
+    '#f59e0b'
+  ]
+  
+  const index = maxValue === 0 
+    ? 0 
+    : Math.min(Math.floor((value / maxValue) * colors.length), colors.length - 1)
+  return colors[index]
+}
+
 function getNodes(_level: number): any {
   return parsedData.nodes.filter(node => node.level! <= _level).map((node) => {
     return {
       ...node,
       color: {
-        background: getNodeColor(node.level!, 0.3),
-        border: getNodeColor(node.level!, 0.8),
+        background: getNodeColor(node.level!, 0.3, node.id),
+        border: getNodeColor(node.level!, 0.8, node.id),
       },
       shape: 'box',
       font: {
@@ -170,7 +195,17 @@ watch(level, async (value) => {
       nodes.some((node: any) => node.id === edge.from)
       && nodes.some((node: any) => node.id === edge.to),
     )
-    network?.setData({ nodes, edges: filteredEdges })
+
+    const maxEdgeValue = Math.max(...filteredEdges.map(edge => edge.value || 0))
+
+    network?.setData({ 
+      nodes, 
+      edges: filteredEdges.map(edge => ({
+        ...edge,
+        maxValue: maxEdgeValue,
+        color: getEdgeColor(edge.value || 0, maxEdgeValue),
+      })) 
+    })
 
     network?.setOptions({ physics: true })
 
@@ -258,7 +293,18 @@ function saveImage() {
 
 onMounted(async () => {
   const nodes = getNodes(level.value)
-  network = new Network(networkRef.value!, { nodes, edges: parsedData.edges }, {
+  const initialEdges = parsedData.edges
+  const maxEdgeValue = Math.max(...initialEdges.map(edge => edge.value || 0))
+
+  network = new Network(networkRef.value!, { 
+    nodes, 
+    edges: initialEdges.map(edge => ({
+      ...edge,
+      maxValue: maxEdgeValue,
+      color: getEdgeColor(edge.value || 0, maxEdgeValue),
+      hoverWidth: 0,
+    })),
+  }, {
     nodes: {
       labelHighlightBold: false,
       shape: 'box',
@@ -275,7 +321,7 @@ onMounted(async () => {
       },
       width: 1,
       color: {
-        color: '#d1d5db',
+        inherit: false,
         highlight: '#4ade80',
       },
       hoverWidth: 0,
