@@ -161,33 +161,42 @@ function getEdgeColor(value: number, maxValue: number) {
   return colors[index]
 }
 
-function getNodes(_level: number): any {
-  return parsedData.nodes.filter(node => node.level! <= _level).map((node) => {
-    return {
-      ...node,
-      color: {
-        background: getNodeColor(node.level!, 0.3, node.id),
-        border: getNodeColor(node.level!, 0.8, node.id),
-      },
-      shape: 'box',
-      font: {
-        size: node.id?.startsWith('contributor ') ? 12 : node.level === 0 ? 51 : node.level === 1 ? 21 : 16,
-        face: 'arial',
-        color: node.level === 0 ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.8)',
-      },
-      borderWidth: node.level === 0 ? 2 : 1,
-      margin: 12,
-      fixed: node.level === 0,
-      x: node.level === 0 ? 0 : undefined,
-      y: node.level === 0 ? 0 : undefined,
-      shapeProperties: { borderDashes: node.level! < 2 ? [0, 0] : [2, 2] },
-    }
-  })
-}
-
 const loading = ref(false)
 const level = ref(Math.min(parsedData.maxLevel, 3))
-watch(level, async (value) => {
+const showContributors = ref(true)
+
+function getNodes(_level: number): any {
+  return parsedData.nodes
+    .filter(node => {
+      if (!showContributors.value && node.id?.startsWith('contributor ')) {
+        return false
+      }
+      return node.level! <= _level
+    })
+    .map((node) => {
+      return {
+        ...node,
+        color: {
+          background: getNodeColor(node.level!, 0.3, node.id),
+          border: getNodeColor(node.level!, 0.8, node.id),
+        },
+        shape: 'box',
+        font: {
+          size: node.id?.startsWith('contributor ') ? 12 : node.level === 0 ? 51 : node.level === 1 ? 21 : 16,
+          face: 'arial',
+          color: node.level === 0 ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.8)',
+        },
+        borderWidth: node.level === 0 ? 2 : 1,
+        margin: 12,
+        fixed: node.level === 0,
+        x: node.level === 0 ? 0 : undefined,
+        y: node.level === 0 ? 0 : undefined,
+        shapeProperties: { borderDashes: node.level! < 2 ? [0, 0] : [2, 2] },
+      }
+    })
+}
+
+watch([level, showContributors], async ([value]) => {
   try {
     loading.value = true
     const nodes = getNodes(value)
@@ -422,6 +431,24 @@ const { isOpen } = storeToRefs(useSlide())
       class="w-[66vw] h-[calc(100vh-6rem)] relative ml-auto"
     >
       <div ref="networkRef" class="h-[calc(100vh-7rem)] w-full" :class="loading ? 'opacity-0' : ''" />
+
+      <div class="absolute left-4 bottom-4">
+        <UButton
+          icon="i-heroicons-user-group"
+          :color="showContributors ? 'primary' : 'gray'"
+          variant="soft"
+          @click="() => {
+            showContributors = !showContributors
+            const currentLevel = level.value
+            level.value = currentLevel + 1
+            setTimeout(() => {
+              level.value = currentLevel
+            }, 0)
+          }"
+        >
+          {{ showContributors ? 'Hide' : 'Show' }} Contributors
+        </UButton>
+      </div>
 
       <div class="absolute right-4 bottom-4">
         <GraphActions
