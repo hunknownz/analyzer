@@ -171,7 +171,7 @@ function getNodes(_level: number): any {
       },
       shape: 'box',
       font: {
-        size: node.level === 0 ? 26 : node.level === 1 ? 18 : 14,
+        size: node.id?.startsWith('contributor ') ? 12 : node.level === 0 ? 51 : node.level === 1 ? 21 : 16,
         face: 'arial',
         color: node.level === 0 ? 'rgba(0,0,0,0.8)' : 'rgba(0,0,0,0.8)',
       },

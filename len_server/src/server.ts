@@ -55,6 +55,7 @@ app.get("/api/analyze", async (req: Request, res: Response) => {
     const result = await analyze(req.query.githubUrl as string);
     res.json({ success: true, data: result });
   } catch (error: any) {
+    console.error(error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
