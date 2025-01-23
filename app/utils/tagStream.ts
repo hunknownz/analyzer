@@ -5,6 +5,7 @@ const abi = [
   "function flowDistributeToRepo(string calldata repoId, uint256 amount, uint256 duration) external",
   "function owner() external view returns (address)",
   "function acceptedToken() external view returns (address)",
+  "function underlyingToken() external view returns (address)",
   "function getDeveloperRepos(string calldata developerId) external view returns (string[] memory)",
 ];
 
@@ -69,26 +70,19 @@ export async function flowDistributeToRepo(
   const tagStream = new ethers.Contract(tagStreamAddress, abi, signer);
 
   // First get the accepted token address
-  const acceptedTokenAddress = await tagStream.acceptedToken();
-  const acceptedToken = new ethers.Contract(
-    acceptedTokenAddress,
+  const underlyingTokenAddress = await tagStream.underlyingToken();
+  const underlyingToken = new ethers.Contract(
+    underlyingTokenAddress,
     erc20Abi,
     signer
   );
 
   // Approve spending
   const amountInWei = ethers.parseEther(amount);
-  await acceptedToken.approve(tagStreamAddress, amountInWei);
+  // await underlyingToken.approve(tagStreamAddress, amountInWei * 1000n);
 
   // Then create the flow distribution
-  return tagStream.flowDistributeToRepo(
-    repoId,
-    amountInWei,
-    durationInSeconds,
-    {
-      gasLimit: 2000000,
-    }
-  );
+  return tagStream.flowDistributeToRepo(repoId, amountInWei, durationInSeconds);
 }
 
 export async function getDeveloperRepos(
