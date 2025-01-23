@@ -1,6 +1,29 @@
 <script setup lang="ts">
 const { isOpen } = storeToRefs(useSlide())
 const { status } = storeToRefs(useWebcontainerStore())
+
+const username = ref('')
+
+onMounted(() => {
+  username.value = localStorage.getItem('username') || ''
+})
+
+const handleLogout = () => {
+  localStorage.removeItem('username')
+  localStorage.removeItem('jwt')
+  username.value = ''
+}
+
+// 修改下拉菜单项配置
+const dropdownItems = [
+  [
+    {
+      label: 'Logout',
+      icon: 'i-heroicons:arrow-left-on-rectangle',
+      click: handleLogout
+    }
+  ]
+]
 </script>
 
 <template>
@@ -25,6 +48,15 @@ const { status } = storeToRefs(useWebcontainerStore())
         </nuxt-link>
 
         <DarkToggle />
+        
+        <UDropdown v-if="username" :items="dropdownItems">
+          <UButton
+            color="gray"
+            variant="ghost"
+            :icon="'i-mdi:account'"
+            :label="username"
+          />
+        </UDropdown>
       </div>
     </div>
   </header>
