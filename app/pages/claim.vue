@@ -10,6 +10,8 @@ const githubHandle = ref('')
 const loading = ref(false)
 const donations = ref<Donation[]>([])
 const toast = useToast()
+const activeTab = ref('rewards')
+const avatarUrl = ref('')
 
 onMounted(() => {
   fetchGithubUser()
@@ -18,7 +20,9 @@ onMounted(() => {
 async function fetchGithubUser() {
   try {
     const username = localStorage.getItem('username')
+    const storedAvatarUrl = localStorage.getItem('avatarUrl')
     githubHandle.value = username
+    avatarUrl.value = storedAvatarUrl || ''
     await fetchDonations()
   }
   catch (error) {
@@ -71,89 +75,158 @@ async function claim(githubHandle: string, index: number) {
 <template>
   <div class="flex justify-center min-h-screen">
     <div class="w-full max-w-md flex flex-col items-center space-y-12 mt-8">
-      <h2 class="text-2xl font-semibold">
-        Claim Your Reward
-      </h2>
-
-      <!-- 替换原来的输入框为登录按钮 -->
-      <div v-if="!githubHandle" class="w-full">
-        <UButton
-          block
-          variant="solid"
-          color="gray"
-          @click="loginWithGithub"
+      <!-- Enhanced tab navigation -->
+      <div class="flex rounded-xl p-1.5 w-full max-w-sm backdrop-blur-sm border dark:bg-gray-800/50 dark:border-gray-700 bg-gray-100/50 border-gray-300">
+        <button
+          class="flex-1 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 relative whitespace-nowrap"
+          :class="activeTab === 'rewards' ? 'text-white bg-black shadow-sm' : 'text-gray-500 hover:text-gray-900'"
+          @click="activeTab = 'rewards'"
         >
-          <template #leading>
-            <UIcon name="i-mdi:github" />
-          </template>
-          Login with GitHub
-        </UButton>
+          Claim Your Rewards
+        </button>
+        <button
+          class="flex-1 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 relative whitespace-nowrap"
+          :class="activeTab === 'streams' ? 'text-white bg-black shadow-sm' : 'text-gray-500 hover:text-gray-900'"
+          @click="activeTab = 'streams'"
+        >
+          Claim Your Streams
+        </button>
       </div>
 
-      <!-- 显示已登录用户 -->
-      <div v-else class="w-full">
-        <p class="text-center mb-4">
-          Logged in as: <strong>{{ githubHandle }}</strong>
-        </p>
-
-        <UButton
-          :loading="loading"
-          block
-          variant="solid"
-          @click="fetchDonations"
-        >
-          <template #leading>
-            <UIcon name="i-heroicons-magnifying-glass" />
-          </template>
-          Fetch Donations
-        </UButton>
-      </div>
-
-      <!-- if loading  -->
-      <div v-if="loading" class="w-full">
-        <div class="flex items-center justify-center h-full">
-          <UIcon name="i-eos-icons:loading" class="w-8 h-8 text-gray" />
+      <!-- Rewards tab content -->
+      <template v-if="activeTab === 'rewards'">
+        <div class="flex flex-col items-center space-y-4 mt-8 mb-2">
+          <img 
+            v-if="avatarUrl"
+            :src="avatarUrl" 
+            :alt="githubHandle"
+            class="w-20 h-20 rounded-full"
+          />
         </div>
-      </div>
-      <div v-else-if="donations.length > 0" class="w-full">
-        <UTable
-          v-if="donations.length"
-          :rows="donations"
-          :columns="[
-            {
-              key: 'project',
-              label: 'Project',
-            },
-            {
-              key: 'amount',
-              label: 'Amount',
-            },
-            {
-              key: 'actions',
-              label: 'Actions',
-            },
-          ]"
-        >
-          <template #actions-data="{ row }">
-            <UButton
-              v-if="!row.claimed"
-              size="xs"
-              color="green"
-              @click="claim(githubHandle, row.index)"
-            >
-              Claim
-            </UButton>
-            <UButton v-else size="xs" color="gray" disabled>
-              Claimed
-            </UButton>
-          </template>
-        </UTable>
-      </div>
-      <div v-else class="w-full">
-        <p class="text-center text-gray-500">
-          No donations yet. Keep contributing to your favorite projects!
-        </p>
-      </div>
+
+        <!-- 替换原来的输入框为登录按钮 -->
+        <div v-if="!githubHandle" class="w-full">
+          <UButton
+            block
+            variant="solid"
+            color="gray"
+            @click="loginWithGithub"
+          >
+            <template #leading>
+              <UIcon name="i-mdi:github" />
+            </template>
+            Login with GitHub
+          </UButton>
+        </div>
+
+        <!-- 显示已登录用户 -->
+        <div v-else class="w-full">
+          <p class="text-center mb-4">
+            Logged in as: <strong>{{ githubHandle }}</strong>
+          </p>
+
+          <UButton
+            :loading="loading"
+            block
+            variant="solid"
+            @click="fetchDonations"
+          >
+            <template #leading>
+              <UIcon name="i-heroicons-magnifying-glass" />
+            </template>
+            Fetch Donations
+          </UButton>
+        </div>
+
+        <!-- if loading  -->
+        <div v-if="loading" class="w-full">
+          <div class="flex items-center justify-center h-full">
+            <UIcon name="i-eos-icons:loading" class="w-8 h-8 text-gray" />
+          </div>
+        </div>
+        <div v-else-if="donations.length > 0" class="w-full">
+          <UTable
+            v-if="donations.length"
+            :rows="donations"
+            :columns="[
+              {
+                key: 'project',
+                label: 'Project',
+              },
+              {
+                key: 'amount',
+                label: 'Amount',
+              },
+              {
+                key: 'actions',
+                label: 'Actions',
+              },
+            ]"
+          >
+            <template #actions-data="{ row }">
+              <UButton
+                v-if="!row.claimed"
+                size="xs"
+                color="green"
+                @click="claim(githubHandle, row.index)"
+              >
+                Claim
+              </UButton>
+              <UButton v-else size="xs" color="gray" disabled>
+                Claimed
+              </UButton>
+            </template>
+          </UTable>
+        </div>
+        <div v-else class="w-full">
+          <p class="text-center text-gray-500">
+            No donations yet. Keep contributing to your favorite projects!
+          </p>
+        </div>
+      </template>
+
+      <!-- Streams tab content -->
+      <template v-else>
+        <div class="flex flex-col items-center space-y-4 mt-8 mb-2">
+          <img 
+            v-if="avatarUrl"
+            :src="avatarUrl" 
+            :alt="githubHandle"
+            class="w-20 h-20 rounded-full"
+          />
+        </div>
+
+        <!-- 替换原来的输入框为登录按钮 -->
+        <div v-if="!githubHandle" class="w-full">
+          <UButton
+            block
+            variant="solid"
+            color="gray"
+            @click="loginWithGithub"
+          >
+            <template #leading>
+              <UIcon name="i-mdi:github" />
+            </template>
+            Login with GitHub
+          </UButton>
+        </div>
+
+        <div v-else class="w-full">
+          <p class="text-center mb-4">
+            Logged in as: <strong>{{ githubHandle }}</strong>
+          </p>
+          <UButton
+            block
+            variant="solid"
+            color="green"
+          >
+            <template #leading>
+              <UIcon name="i-mdi:water-sync" class="w-5 h-5" />
+            </template>
+            Claim Your Streams
+          </UButton>
+        </div>
+      </template>
     </div>
   </div>
 </template>

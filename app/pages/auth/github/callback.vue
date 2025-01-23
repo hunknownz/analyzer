@@ -20,6 +20,7 @@ onMounted(async () => {
       if (userInfo) {
         localStorage.setItem('jwt', userInfo.jwt);
         localStorage.setItem('username', userInfo.username);
+        localStorage.setItem('avatarUrl', userInfo.photos[0].value);
 
         // const queryParams = new URLSearchParams({
         //   username: userInfo.username,
