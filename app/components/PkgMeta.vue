@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PkgMeta } from '~~/types/pkg'
-import { Octokit } from 'octokit'
 import { marked } from 'marked'
+import { Octokit } from 'octokit'
 
 const { meta, maxLevel } = defineProps<{
   meta: PkgMeta | undefined
@@ -19,20 +19,6 @@ const network: Network | null = null
 const visData = await webcontainerInstance?.fs.readFile('./visData.json', 'utf-8')
 const parsedData = JSON.parse(visData!) as Graph
 
-// const pmcContributors = computed(() => {
-//   if (!parsedData?.nodes)
-//     return []
-//   const contributors = parsedData.nodes
-//     .filter(node => node.label.startsWith('@PMC-'))
-//     .map(node => node.label.replace('@PMC-', ''))
-
-//   if (meta?.name.includes('youbet')) {
-//     contributors.push('wfnuser')
-//   }
-
-//   return contributors
-// })
-
 const githubUrl = computed(() => {
   if (!meta)
     return undefined
@@ -49,12 +35,12 @@ watch(githubUrl, async (url: string) => {
 
   const hostname = window.location.hostname
   try {
-  const response = await fetch(`http://${hostname}:5099/api/contributors?githubUrl=${encodeURIComponent(url)}`)
-   if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const { success, data } = await response.json()
-  if (success) {
+    const response = await fetch(`http://${hostname}:5099/api/contributors?githubUrl=${encodeURIComponent(url)}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const { success, data } = await response.json()
+    if (success) {
       contributors.value = data
     }
   }
@@ -106,6 +92,18 @@ async function donation() {
   if (!contributors.value || !contributors.value.length)
     return
   tipBatch(contributors.value.slice(0, 10).map((contributor: any) => contributor.login), meta.name)
+}
+
+async function createPool() {
+  if (!contributors.value || !contributors.value.length)
+    return
+  giveUnitsToRepoContributors(meta.name, contributors.value.slice(0, 10).map((contributor: any) => contributor.login), contributors.value.slice(0, 10).map((contributor: any) => contributor.contributions))
+}
+
+async function startStream() {
+  if (!contributors.value || !contributors.value.length)
+    return
+  flowDistributeToRepo(meta.name, '0.01', 3600 * 10)
 }
 
 const analysisResult = ref<any>(null)
@@ -297,11 +295,23 @@ async function analyzePackage() {
       </template>
 
       <div class="mt-2">
+        <UButton color="purple" size="sm" target="_blank" class="w-full flex items-center justify-center" @click="createPool">
+          <UIcon name="i-mdi:charity" class="mr-2" />
+          Create Pool
+        </UButton>
+      </div>
+      <div class="mt-2">
+        <UButton color="green" size="sm" target="_blank" class="w-full flex items-center justify-center" @click="startStream">
+          <UIcon name="i-mdi:charity" class="mr-2" />
+          Start Stream
+        </UButton>
+      </div>
+      <!-- <div class="mt-2">
         <UButton color="green" size="sm" target="_blank" class="w-full flex items-center justify-center" @click="donation">
           <UIcon name="i-mdi:charity" class="mr-2" />
           Donate
         </UButton>
-      </div>
+      </div> -->
       <div class="mt-2 space-y-4">
         <UButton
           color="blue"
