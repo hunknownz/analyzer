@@ -47,18 +47,7 @@ export async function giveUnitsToRepoContributors(
 ) {
   const { signer } = await getWalletProvider();
   const tagStream = new ethers.Contract(tagStreamAddress, abi, signer);
-
-  // Convert numbers to uint128 compatible format
-  const unitsFormatted = units.map((unit) => ethers.getBigInt(unit));
-
-  return tagStream.giveUnitsToRepoContributors(
-    repoId,
-    developerIds,
-    unitsFormatted,
-    {
-      gasLimit: 2000000,
-    }
-  );
+  return tagStream.giveUnitsToRepoContributors(repoId, developerIds, units);
 }
 
 export async function flowDistributeToRepo(

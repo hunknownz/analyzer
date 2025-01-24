@@ -88,6 +88,10 @@ const dependenciesCount = computed(() => Object.keys(meta?.dependencies || {}).l
 const level = defineModel<number>('level')
 const { isOpen } = storeToRefs(useSlide())
 
+const showStreamModal = ref(false)
+const streamAmount = ref('0.01')
+const streamHours = ref(10)
+
 async function donation() {
   if (!contributors.value || !contributors.value.length)
     return
@@ -103,7 +107,17 @@ async function createPool() {
 async function startStream() {
   if (!contributors.value || !contributors.value.length)
     return
-  flowDistributeToRepo(meta.name, '0.01', 3600 * 10)
+  showStreamModal.value = true
+}
+
+async function confirmStream() {
+  try {
+    await flowDistributeToRepo(meta.name, streamAmount.value, streamHours.value * 3600)
+    showStreamModal.value = false
+  }
+  catch (error) {
+    console.error('Failed to start stream:', error)
+  }
 }
 
 const analysisResult = ref<any>(null)
@@ -361,6 +375,54 @@ async function analyzePackage() {
       </div>
     </div>
   </div>
+
+  <UModal v-model="showStreamModal">
+    <UCard>
+      <template #header>
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-semibold leading-6">
+            Configure Stream
+          </h3>
+        </div>
+      </template>
+
+      <div class="space-y-4">
+        <UFormGroup label="Amount (MTK)">
+          <UInput
+            v-model="streamAmount"
+            placeholder="Enter amount in ETH"
+          />
+        </UFormGroup>
+
+        <UFormGroup label="Duration (Hours)">
+          <UInput
+            v-model="streamHours"
+            type="number"
+            min="1"
+            placeholder="Enter duration in hours"
+          />
+        </UFormGroup>
+      </div>
+
+      <template #footer>
+        <div class="flex justify-end space-x-4">
+          <UButton
+            color="gray"
+            variant="soft"
+            @click="showStreamModal = false"
+          >
+            Cancel
+          </UButton>
+          <UButton
+            color="green"
+            @click="confirmStream"
+          >
+            Start Stream
+          </UButton>
+        </div>
+      </template>
+    </UCard>
+  </UModal>
 </template>
 
 <style scoped>

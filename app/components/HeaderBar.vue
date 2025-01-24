@@ -35,7 +35,7 @@ const dropdownItems = [
       />
 
       <nuxt-link to="/" class="text-xl font-bold text-gray-900 dark:text-gray-100">
-        Analyzer3
+        DeepFlow
       </nuxt-link>
 
       <div>

@@ -49,7 +49,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       title:
-        "Analyzer3 | Visualize the dependency graph of web3 opensource projects.",
+        "DeepFlow | Visualize the dependency graph of web3 opensource projects.",
       link: [{ rel: "icon", type: "image/svg+xml", href: "/logo-2.svg" }],
     },
   },
