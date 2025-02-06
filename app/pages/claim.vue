@@ -10,12 +10,22 @@ const githubHandle = ref('')
 const loading = ref(false)
 const donations = ref<Donation[]>([])
 const toast = useToast()
-const activeTab = ref('rewards')
+const activeTab = ref('streams')
 const avatarUrl = ref('')
+const repos = ref<string[]>([])
 
 onMounted(() => {
   fetchGithubUser()
+  fetchRepos(githubHandle.value)
 })
+
+async function fetchRepos(githubHandle: string) {
+  repos.value = await getDeveloperRepos(githubHandle)
+}
+
+async function onConnect(githubHandle: string, repoId: string) {
+  await connectToRepo(githubHandle, repoId)
+}
 
 async function fetchGithubUser() {
   try {
@@ -79,29 +89,29 @@ async function claim(githubHandle: string, index: number) {
       <div class="flex rounded-xl p-1.5 w-full max-w-sm backdrop-blur-sm border dark:bg-gray-800/50 dark:border-gray-700 bg-gray-100/50 border-gray-300">
         <button
           class="flex-1 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 relative whitespace-nowrap"
-          :class="activeTab === 'rewards' ? 'text-white bg-black shadow-sm' : 'text-gray-500 hover:text-gray-900'"
-          @click="activeTab = 'rewards'"
-        >
-          Claim Your Rewards
-        </button>
-        <button
-          class="flex-1 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 relative whitespace-nowrap"
           :class="activeTab === 'streams' ? 'text-white bg-black shadow-sm' : 'text-gray-500 hover:text-gray-900'"
           @click="activeTab = 'streams'"
         >
           Claim Your Streams
+        </button>
+        <button
+          class="flex-1 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 relative whitespace-nowrap"
+          :class="activeTab === 'rewards' ? 'text-white bg-black shadow-sm' : 'text-gray-500 hover:text-gray-900'"
+          @click="activeTab = 'rewards'"
+        >
+          Claim Your Rewards
         </button>
       </div>
 
       <!-- Rewards tab content -->
       <template v-if="activeTab === 'rewards'">
         <div class="flex flex-col items-center space-y-4 mt-8 mb-2">
-          <img 
+          <img
             v-if="avatarUrl"
-            :src="avatarUrl" 
+            :src="avatarUrl"
             :alt="githubHandle"
             class="w-20 h-20 rounded-full"
-          />
+          >
         </div>
 
         <!-- 替换原来的输入框为登录按钮 -->
@@ -188,12 +198,12 @@ async function claim(githubHandle: string, index: number) {
       <!-- Streams tab content -->
       <template v-else>
         <div class="flex flex-col items-center space-y-4 mt-8 mb-2">
-          <img 
+          <img
             v-if="avatarUrl"
-            :src="avatarUrl" 
+            :src="avatarUrl"
             :alt="githubHandle"
             class="w-20 h-20 rounded-full"
-          />
+          >
         </div>
 
         <!-- 替换原来的输入框为登录按钮 -->
@@ -225,6 +235,35 @@ async function claim(githubHandle: string, index: number) {
             </template>
             Claim Your Streams
           </UButton>
+        </div>
+
+        <div v-if="repos.length > 0">
+          <p class="text-center text-gray-500">
+            Contributed to {{ repos.length }} repos
+          </p>
+          <UTable
+            :rows="repos.map(repo => ({ repo }))"
+            :columns="[
+              {
+                key: 'repo',
+                label: 'Repo',
+              },
+              {
+                key: 'actions',
+                label: 'Actions',
+              },
+            ]"
+          >
+            <template #actions-data="{ row }">
+              <UButton
+                size="xs"
+                color="green"
+                @click="onConnect(githubHandle, row.repo)"
+              >
+                Connect
+              </UButton>
+            </template>
+          </UTable>
         </div>
       </template>
     </div>
