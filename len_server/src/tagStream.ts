@@ -51,26 +51,7 @@ export class TagStream {
   }
 
   async connectWallet() {
-    if (typeof window === 'undefined' || !window.ethereum) {
-      throw new Error('Please install MetaMask!')
-    }
-
-    try {
-      await window.ethereum.request({ method: 'eth_requestAccounts' })
-      if (window.ethereum.chainId !== '0xAA37DC') {
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0xAA37DC' }],
-        })
-      }
-      const provider = new ethers.BrowserProvider(window.ethereum)
-      this.signer = await provider.getSigner()
-      this.contract = new ethers.Contract(TagStream.address, TagStream.abi, this.signer)
-    }
-    catch (error) {
-      console.error('Failed to connect wallet:', error)
-      throw error
-    }
+    throw new Error('Please install MetaMask!')
   }
 
   async getWalletAddress() {

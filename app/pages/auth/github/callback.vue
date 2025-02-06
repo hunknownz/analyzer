@@ -16,7 +16,7 @@ onMounted(async () => {
       
       const responseData = await response.json();
       const userInfo = responseData.data.data;
-      
+
       if (userInfo) {
         localStorage.setItem('jwt', userInfo.jwt);
         localStorage.setItem('username', userInfo.username);

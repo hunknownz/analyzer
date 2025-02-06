@@ -65,6 +65,29 @@ async function fetchDonations() {
   }
 }
 
+async function setReceiver() {
+  const jwt = localStorage.getItem('jwt')
+  const receiverAddress = await tagStream.getWalletAddress()
+  const response = await fetch('http://localhost:5099/api/setReceiver', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${jwt}`,
+    },
+    body: JSON.stringify({ receiverAddress }),
+  })
+  // if success, set receiver address to local storage
+  if (response.ok) {
+    toast.add({ title: 'Successfully set receiver', color: 'green' })
+  }
+  else if (response.status === 401) {
+    loginWithGithub()
+  }
+  else {
+    toast.add({ title: 'Failed to set receiver', color: 'red' })
+  }
+}
+
 async function claim(githubHandle: string, index: number) {
   loading.value = true
   try {
@@ -229,6 +252,7 @@ async function claim(githubHandle: string, index: number) {
             block
             variant="solid"
             color="green"
+            @click="setReceiver"
           >
             <template #leading>
               <UIcon name="i-mdi:water-sync" class="w-5 h-5" />

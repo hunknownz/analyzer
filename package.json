@@ -41,6 +41,7 @@
   "dependencies": {
     "@octokit/rest": "^21.0.2",
     "ethers": "^6.13.4",
+    "jsonwebtoken": "^9.0.2",
     "marked": "^15.0.4",
     "octokit": "^4.0.2"
   }
