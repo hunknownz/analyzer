@@ -13,10 +13,18 @@ const toast = useToast()
 const activeTab = ref('streams')
 const avatarUrl = ref('')
 const repos = ref<string[]>([])
+const receiverAddress = ref('')
+
+const isZeroAddress = computed(() => {
+  return !receiverAddress.value || receiverAddress.value === '0x0000000000000000000000000000000000000000'
+})
 
 onMounted(() => {
   fetchGithubUser()
-  fetchRepos(githubHandle.value)
+  if (githubHandle.value) {
+    fetchRepos(githubHandle.value)
+    getReceiverContractReceiver(githubHandle.value)
+  }
 })
 
 async function fetchRepos(githubHandle: string) {
@@ -65,6 +73,11 @@ async function fetchDonations() {
   }
 }
 
+async function getReceiverContractReceiver(developerId: string) {
+  const address = await tagStream.getReceiverContractReceiver(developerId)
+  receiverAddress.value = address
+}
+
 async function setReceiver() {
   const jwt = localStorage.getItem('jwt')
   const receiverAddress = await tagStream.getWalletAddress()
@@ -86,6 +99,10 @@ async function setReceiver() {
   else {
     toast.add({ title: 'Failed to set receiver', color: 'red' })
   }
+}
+
+async function claimStreams() {
+  await tagStream.claimRewards(githubHandle.value)
 }
 
 async function claim(githubHandle: string, index: number) {
@@ -249,6 +266,7 @@ async function claim(githubHandle: string, index: number) {
             Logged in as: <strong>{{ githubHandle }}</strong>
           </p>
           <UButton
+            v-if="isZeroAddress"
             block
             variant="solid"
             color="green"
@@ -257,7 +275,16 @@ async function claim(githubHandle: string, index: number) {
             <template #leading>
               <UIcon name="i-mdi:water-sync" class="w-5 h-5" />
             </template>
-            Claim Your Streams
+            Bind Wallet
+          </UButton>
+          <UButton
+            v-else
+            block
+            variant="solid"
+            color="green"
+            @click="claimStreams"
+          >
+            Claim Streams
           </UButton>
         </div>
 

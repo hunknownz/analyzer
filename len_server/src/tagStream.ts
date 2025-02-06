@@ -21,7 +21,7 @@ export class TagStream {
     'function allowance(address owner, address spender) external view returns (uint256)',
   ]
 
-  private static address = '0x8a6fd8fAeae6128661351EFfD4464845f624C8A7'
+  private static address = '0xC67471Ba6D2e1f9237C28ee64F280179A0559E2c'
 
   private static receiverAbi = [
     // View functions
