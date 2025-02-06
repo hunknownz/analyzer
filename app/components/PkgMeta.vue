@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PkgMeta } from '~~/types/pkg'
+import { tagStream } from '@/utils/tagStream'
 import { marked } from 'marked'
 import { Octokit } from 'octokit'
 
@@ -101,7 +102,7 @@ async function donation() {
 async function createPool() {
   if (!contributors.value || !contributors.value.length)
     return
-  giveUnitsToRepoContributors(meta.name, contributors.value.slice(0, 10).map((contributor: any) => contributor.login), contributors.value.slice(0, 10).map((contributor: any) => contributor.contributions))
+  tagStream.giveUnitsToRepoContributors(meta.name, contributors.value.slice(0, 10).map((contributor: any) => contributor.login), contributors.value.slice(0, 10).map((contributor: any) => contributor.contributions))
 }
 
 async function startStream() {
@@ -112,7 +113,7 @@ async function startStream() {
 
 async function confirmStream() {
   try {
-    await flowDistributeToRepo(meta.name, streamAmount.value, streamHours.value * 3600)
+    await tagStream.flowDistributeToRepo(meta.name, streamAmount.value, streamHours.value * 3600)
     showStreamModal.value = false
   }
   catch (error) {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Donation } from '@/utils/contract'
-import { claimDonation, getDonations } from '@/utils/contract'
+import { tagStream } from '@/utils/tagStream'
 
 const config = useRuntimeConfig()
 const GITHUB_CLIENT_ID = config.public.GITHUB_CLIENT_ID
@@ -20,11 +20,11 @@ onMounted(() => {
 })
 
 async function fetchRepos(githubHandle: string) {
-  repos.value = await getDeveloperRepos(githubHandle)
+  repos.value = await tagStream.getDeveloperRepos(githubHandle)
 }
 
 async function onConnect(githubHandle: string, repoId: string) {
-  await connectToRepo(githubHandle, repoId)
+  await tagStream.connectToRepo(githubHandle, repoId)
 }
 
 async function fetchGithubUser() {
