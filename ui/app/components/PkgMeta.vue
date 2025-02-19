@@ -36,7 +36,7 @@ watch(githubUrl, async (url: string) => {
 
   const hostname = window.location.hostname
   try {
-    const response = await fetch(`http://${hostname}:5099/api/contributors?githubUrl=${encodeURIComponent(url)}`)
+    const response = await fetch(`http://${hostname}:5099/api/github/contributors?githubUrl=${encodeURIComponent(url)}`)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -163,7 +163,7 @@ async function analyzePackage() {
 
   try {
     const hostname = window.location.hostname
-    const response = await fetch(`http://${hostname}:5099/api/analyze?githubUrl=${encodeURIComponent(githubUrl.value)}`)
+    const response = await fetch(`http://${hostname}:5099/api/ai/analyze?githubUrl=${encodeURIComponent(githubUrl.value)}`)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }

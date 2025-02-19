@@ -81,7 +81,7 @@ async function getReceiverContractReceiver(developerId: string) {
 async function setReceiver() {
   const jwt = localStorage.getItem('jwt')
   const receiverAddress = await tagStream.getWalletAddress()
-  const response = await fetch('http://localhost:5099/api/setReceiver', {
+  const response = await fetch('http://localhost:5099/api/tag-stream/setReceiver', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

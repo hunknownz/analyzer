@@ -88,7 +88,7 @@ for (let i = 0; i < len; i++) {
 
   if (githubUrl) {
     try {
-      const response = await fetch(`http://${hostname}:5099/api/contributors?githubUrl=${encodeURIComponent(githubUrl)}`)
+      const response = await fetch(`http://${hostname}:5099/api/github/contributors?githubUrl=${encodeURIComponent(githubUrl)}`)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
