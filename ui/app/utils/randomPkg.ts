@@ -1,9 +1,7 @@
 export function randomPkg(count: number) {
   const pkgs = [
     "youbet-sdk",
-    "web3-core",
     "ethers",
-    "@rainbow-me/rainbowkit",
     "wagmi",
     "viem",
     "@elizaos/core",
