@@ -22,6 +22,10 @@ const parsedData = JSON.parse(visData!) as Graph
 
 const githubUrl = computed(() => {
   if (!meta)
+    // TODO: eliza has no github url
+    if (name === '@elizaos/core') {
+      return 'https://github.com/elizaOS/eliza'
+    }
     return undefined
   if (typeof meta.repository === 'string')
     return `https://github.com/${meta.repository}`
