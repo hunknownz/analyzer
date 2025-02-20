@@ -12,7 +12,7 @@ export class TagStreamService {
     if (!privateKey) {
       //   throw new Error('Missing PRIVATE_KEY in environment variables');
     }
-    // this.tagStream = new TagStream(privateKey);
+    this.tagStream = new TagStream(privateKey);
   }
 
   async verifyToken(token: string) {

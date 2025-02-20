@@ -6,7 +6,7 @@ export class TagStream {
   private contract: ethers.Contract
 
   private static abi = [
-    'function giveUnitsToRepoContributors(string calldata repoId, string[] calldata developerId, uint128[] calldata units) external',
+    'function giveUnitsForRepo(string memory repoId, string[] memory developerIds, uint128[] memory developerUnits, string[] memory dependentRepoIds, uint128[] memory dependentUnits) external',
     'function flowDistributeToRepo(string calldata repoId, uint256 amount, uint256 duration) external',
     'function owner() external view returns (address)',
     'function acceptedToken() external view returns (address)',
@@ -21,7 +21,8 @@ export class TagStream {
     'function allowance(address owner, address spender) external view returns (uint256)',
   ]
 
-  private static address = '0xC67471Ba6D2e1f9237C28ee64F280179A0559E2c'
+  // private static address = '0xC67471Ba6D2e1f9237C28ee64F280179A0559E2c'
+  private static address = '0xC1b916CB38B034042f135AfF091B4328A19d2616'
 
   private static receiverAbi = [
     // View functions
@@ -79,14 +80,23 @@ export class TagStream {
     return await this.signer!.getAddress()
   }
 
-  async giveUnitsToRepoContributors(
+  async giveUnitsForRepo(
     repoId: string,
     developerIds: string[],
-    units: number[],
+    developerUnits: number[],
+    dependentRepoIds: string[],
+    dependentUnits: number[],
   ) {
     if (!this.signer)
       await this.connectWallet()
-    return this.contract.giveUnitsToRepoContributors(repoId, developerIds, units)
+
+    return this.contract.giveUnitsForRepo(
+      repoId,
+      developerIds,
+      developerUnits,
+      dependentRepoIds,
+      dependentUnits,
+    )
   }
 
   async flowDistributeToRepo(

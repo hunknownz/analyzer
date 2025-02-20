@@ -107,7 +107,10 @@ async function donation() {
 async function createPool() {
   if (!contributors.value || !contributors.value.length)
     return
-  tagStream.giveUnitsToRepoContributors(meta.name, contributors.value.slice(0, 10).map((contributor: any) => contributor.login), contributors.value.slice(0, 10).map((contributor: any) => contributor.contributions))
+  // for each dependency give 2 units
+  const dependencies = Object.keys(meta?.dependencies || {})
+  const dependentUnits = dependencies.map(() => 2)
+  tagStream.giveUnitsForRepo(meta.name, contributors.value.slice(0, 10).map((contributor: any) => contributor.login), contributors.value.slice(0, 10).map((contributor: any) => contributor.contributions), dependencies, dependentUnits)
 }
 
 async function startStream() {
