@@ -21,12 +21,13 @@ const visData = await webcontainerInstance?.fs.readFile('./visData.json', 'utf-8
 const parsedData = JSON.parse(visData!) as Graph
 
 const githubUrl = computed(() => {
-  if (!meta)
+  if (!meta) {
     // TODO: eliza has no github url
     if (name === '@elizaos/core') {
       return 'https://github.com/elizaOS/eliza'
     }
     return undefined
+  }
   if (typeof meta.repository === 'string')
     return `https://github.com/${meta.repository}`
   return meta?.repository?.url?.replace('git+https://github.com/', 'https://github.com/').replace('git://github.com', 'https://github.com')
