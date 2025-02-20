@@ -398,6 +398,13 @@ onMounted(async () => {
       else {
         githubUrl = pkgInfo.repository.url?.replace('git+https://github.com/', 'https://github.com/').replace('git://github.com', 'https://github.com')
       }
+    } else {
+      if (name === '@elizaos/core') {
+        githubUrl = 'https://github.com/elizaOS/eliza'
+      }
+      if (name === 'agent-twitter-client') {
+        githubUrl = 'https://github.com/elizaOS/agent-twitter-client'
+      }
     }
     if (pkgInfo?.name === '@elizaos/core') {
       githubUrl = 'https://github.com/elizaos/eliza'

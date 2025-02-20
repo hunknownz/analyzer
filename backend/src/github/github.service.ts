@@ -70,13 +70,24 @@ export class GithubService {
         take: 10,
       });
 
+      // 遍历rankEntiy中的每一个actorId，然后从userRepo中取出对应的user，并建立一个userGithubId => avatar_url的map
+      const userMap = new Map<number, string>();
+      for (const item of rankEntity) {
+        const user = await this.userRepo.findOne({
+          where: { githubId: item.actorId },
+        });
+        if (user) {
+          userMap.set(item.actorId, user.avatarUrl);
+        }
+      }
+
       // atcorId => id
       // actorLogin => login
       // openrank => contributions
       return rankEntity.map((item) => ({
         id: item.actorId,
         login: item.actorLogin,
-        avatar_url: `https://avatars.githubusercontent.com/u/${item.actorId}`,
+        avatar_url: userMap.get(item.actorId),
         contributions: item.openrank,
       }));
     }

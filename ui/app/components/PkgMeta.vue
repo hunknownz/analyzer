@@ -36,8 +36,15 @@ const githubUrl = computed(() => {
 const contributors = ref([])
 
 watch(githubUrl, async (url: string) => {
-  if (!url)
+  if (!url && name !== '@elizaos/core') {
     return
+  }
+  if (name === '@elizaos/core') {
+    url = 'https://github.com/elizaOS/eliza'
+  }
+  if (name === 'agent-twitter-client') {
+    url = 'https://github.com/elizaOS/agent-twitter-client'
+  }
 
   const hostname = window.location.hostname
   try {
