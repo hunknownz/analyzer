@@ -51,6 +51,9 @@ const contributors = [
 // }
 
 function collect(entry, level = 0, visited = new Set()) {
+  if (level >= 4) {
+    return;
+  }
   if (visited.has(entry)) {
     return;
   }
