@@ -37,12 +37,12 @@ async function getNestedPkgInfo(pkg: string) {
 }
 
 async function getPkgInfo(pkg: string) {
-  let pkgInfo = '';
+  let pkgInfo = ''
   try {
     const _pkgInfo = await webcontainerInstance?.fs.readFile(
       `./node_modules/${pkg}/package.json`,
-      'utf-8'
-    );
+      'utf-8',
+    )
     if (_pkgInfo)
       pkgInfo = _pkgInfo
   }
@@ -55,12 +55,12 @@ async function getPkgInfo(pkg: string) {
 }
 
 async function getAnyPkgInfo(pkg: string) {
-  let pkgInfo = '';
+  let pkgInfo = ''
   try {
     const _pkgInfo = await webcontainerInstance?.fs.readFile(
       `./node_modules/${pkg}/package.json`,
-      'utf-8'
-    );
+      'utf-8',
+    )
     if (_pkgInfo)
       pkgInfo = _pkgInfo
   }
@@ -73,12 +73,13 @@ async function getAnyPkgInfo(pkg: string) {
 }
 
 const hostname = window.location.hostname
-const len = parsedData.nodes.length
-for (let i = 0; i < len; i++) {
-  const node = parsedData.nodes[i]
+
+// 创建所有请求的 Promise 数组
+const contributorPromises = parsedData.nodes.map(async (node) => {
   const pkg = node.label
   const pkgInfo = await getAnyPkgInfo(pkg)
   let githubUrl = ''
+
   if (pkgInfo?.repository) {
     if (typeof pkgInfo.repository === 'string') {
       githubUrl = `https://github.com/${pkgInfo.repository}`
@@ -88,43 +89,58 @@ for (let i = 0; i < len; i++) {
     }
   }
 
-  if (githubUrl) {
-    try {
-      const response = await fetch(`http://${hostname}:5099/api/github/contributors?githubUrl=${encodeURIComponent(githubUrl)}`)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const { success, data } = await response.json()
-      if (success) {
-        const contributionsMap = new Map()
-        const contributorNodes = data.map((contributor) => {
-          const id = `contributor ${contributor.login}`
-          if (!contributorMap.has(id)) {
-            contributorMap.set(id, {
-              id,
-              label: id,
-              level: node.level + 1,
-            })
-            parsedData.nodes.push(contributorMap.get(id))
-          }
-          contributionsMap.set(id, contributor.contributions)
-          return contributorMap.get(id)
-        })
+  if (!githubUrl)
+    return null
 
-        contributorNodes.forEach((contributorNode) => {
-          parsedData.edges.push({
-            from: node.id,
-            to: contributorNode.id,
-            value: contributionsMap.get(contributorNode.id)*150/100,
-          })
+  try {
+    const response = await fetch(`http://${hostname}:5099/api/github/contributors?githubUrl=${encodeURIComponent(githubUrl)}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const { success, data } = await response.json()
+    if (!success)
+      return null
+
+    const contributionsMap = new Map()
+    const contributorNodes = data.map((contributor) => {
+      const id = `contributor ${contributor.login}`
+      if (!contributorMap.has(id)) {
+        contributorMap.set(id, {
+          id,
+          label: id,
+          level: node.level + 1,
         })
+        parsedData.nodes.push(contributorMap.get(id))
       }
-    }
-    catch (error) {
-      console.error('Failed to fetch contributors:', error)
-    }
+      contributionsMap.set(id, contributor.contributions)
+      return contributorMap.get(id)
+    })
+
+    return { node, contributorNodes, contributionsMap }
   }
-}
+  catch (error) {
+    console.error('Failed to fetch contributors:', error)
+    return null
+  }
+})
+
+// 等待所有请求完成
+const results = await Promise.all(contributorPromises)
+
+// 处理结果，添加边
+results.forEach((result) => {
+  if (!result)
+    return
+  const { node, contributorNodes, contributionsMap } = result
+
+  contributorNodes.forEach((contributorNode) => {
+    parsedData.edges.push({
+      from: node.id,
+      to: contributorNode.id,
+      value: contributionsMap.get(contributorNode.id) * 150 / 100,
+    })
+  })
+})
 
 function getNodeColor(level: number, opacity = 1, id?: string) {
   if (id?.startsWith('contributor '))
@@ -145,7 +161,6 @@ function getNodeColor(level: number, opacity = 1, id?: string) {
 }
 
 function getEdgeColor(value: number, maxValue: number) {
-
   if (value === 0)
     return '#e5e7eb'
 
@@ -154,11 +169,11 @@ function getEdgeColor(value: number, maxValue: number) {
     '#fde68a',
     '#fcd34d',
     '#fbbf24',
-    '#f59e0b'
+    '#f59e0b',
   ]
-  
-  const index = maxValue === 0 
-    ? 0 
+
+  const index = maxValue === 0
+    ? 0
     : Math.min(Math.floor((value / maxValue) * colors.length), colors.length - 1)
   return colors[index]
 }
@@ -169,7 +184,7 @@ const showContributors = ref(true)
 
 function getNodes(_level: number): any {
   return parsedData.nodes
-    .filter(node => {
+    .filter((node) => {
       if (!showContributors.value && node.id?.startsWith('contributor ')) {
         return false
       }
@@ -209,13 +224,13 @@ watch([level, showContributors], async ([value]) => {
 
     const maxEdgeValue = Math.max(...filteredEdges.map(edge => edge.value || 0))
 
-    network?.setData({ 
-      nodes, 
+    network?.setData({
+      nodes,
       edges: filteredEdges.map(edge => ({
         ...edge,
         maxValue: maxEdgeValue,
         color: getEdgeColor(edge.value || 0, maxEdgeValue),
-      })) 
+      })),
     })
 
     network?.setOptions({ physics: true })
@@ -307,8 +322,8 @@ onMounted(async () => {
   const initialEdges = parsedData.edges
   const maxEdgeValue = Math.max(...initialEdges.map(edge => edge.value || 0))
 
-  network = new Network(networkRef.value!, { 
-    nodes, 
+  network = new Network(networkRef.value!, {
+    nodes,
     edges: initialEdges.map(edge => ({
       ...edge,
       maxValue: maxEdgeValue,
@@ -376,13 +391,16 @@ onMounted(async () => {
     getPkgInfo(params.nodes[0])
     const pkgInfo = await getAnyPkgInfo(params.nodes[0])
     let githubUrl = ''
+    console.log('pkgInfo:', pkgInfo)
     if (pkgInfo?.repository) {
       if (typeof pkgInfo.repository === 'string') {
         githubUrl = `https://github.com/${pkgInfo.repository}`
-      } else {
+      }
+      else {
         githubUrl = pkgInfo.repository.url?.replace('git+https://github.com/', 'https://github.com/').replace('git://github.com', 'https://github.com')
       }
     }
+    console.log('github url:', githubUrl)
     if (githubUrl) {
       contributorsPanel.value?.updateContributors(githubUrl)
     }
@@ -412,24 +430,24 @@ const { isOpen } = storeToRefs(useSlide())
         v-model:level="level"
         :max-level="parsedData.maxLevel"
         :meta="pkgMetaData"
-        @save-image="saveImage"
         class="w-full"
+        @save-image="saveImage"
       />
     </div>
 
-    <USlideover 
-      v-model="isOpen" 
-      class="md:hidden block" 
+    <USlideover
+      v-model="isOpen"
+      class="md:hidden block"
       side="left"
-      :width="'33vw'"
+      width="33vw"
     >
       <div class="m-4 w-full">
         <PkgMeta
           v-model:level="level"
           :max-level="parsedData.maxLevel"
           :meta="pkgMetaData"
-          @save-image="saveImage"
           class="w-full"
+          @save-image="saveImage"
         />
       </div>
     </USlideover>
@@ -441,7 +459,7 @@ const { isOpen } = storeToRefs(useSlide())
           background: 'bg-gray-50 dark:bg-gray-900',
           padding: 'p-2 sm:p-2',
         },
-      }" 
+      }"
       class="w-[66vw] h-[calc(100vh-6rem)] relative ml-auto"
     >
       <div ref="networkRef" class="h-[calc(100vh-7rem)] w-full" :class="loading ? 'opacity-0' : ''" />
