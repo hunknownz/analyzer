@@ -391,7 +391,6 @@ onMounted(async () => {
     getPkgInfo(params.nodes[0])
     const pkgInfo = await getAnyPkgInfo(params.nodes[0])
     let githubUrl = ''
-    console.log('pkgInfo:', pkgInfo)
     if (pkgInfo?.repository) {
       if (typeof pkgInfo.repository === 'string') {
         githubUrl = `https://github.com/${pkgInfo.repository}`
@@ -400,7 +399,9 @@ onMounted(async () => {
         githubUrl = pkgInfo.repository.url?.replace('git+https://github.com/', 'https://github.com/').replace('git://github.com', 'https://github.com')
       }
     }
-    console.log('github url:', githubUrl)
+    if (pkgInfo?.name === '@elizaos/core') {
+      githubUrl = 'https://github.com/elizaos/eliza'
+    }
     if (githubUrl) {
       contributorsPanel.value?.updateContributors(githubUrl)
     }
