@@ -70,13 +70,13 @@ export class GithubService {
         take: 10,
       });
 
-      console.log(rankEntity);
       // atcorId => id
       // actorLogin => login
       // openrank => contributions
       return rankEntity.map((item) => ({
         id: item.actorId,
         login: item.actorLogin,
+        avatar_url: `https://avatars.githubusercontent.com/u/${item.actorId}`,
         contributions: item.openrank,
       }));
     }

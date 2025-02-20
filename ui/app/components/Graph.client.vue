@@ -22,6 +22,8 @@ const pkgLock = JSON.parse(pkgLockRaw!)
 
 const contributorMap = new Map()
 
+const contributorsPanel = ref()
+
 async function getNestedPkgInfo(pkg: string) {
   const packages = pkgLock.packages
 
@@ -370,8 +372,20 @@ onMounted(async () => {
     getPkgInfo(name)
   })
 
-  network?.on('selectNode', (params) => {
+  network?.on('selectNode', async (params) => {
     getPkgInfo(params.nodes[0])
+    const pkgInfo = await getAnyPkgInfo(params.nodes[0])
+    let githubUrl = ''
+    if (pkgInfo?.repository) {
+      if (typeof pkgInfo.repository === 'string') {
+        githubUrl = `https://github.com/${pkgInfo.repository}`
+      } else {
+        githubUrl = pkgInfo.repository.url?.replace('git+https://github.com/', 'https://github.com/').replace('git://github.com', 'https://github.com')
+      }
+    }
+    if (githubUrl) {
+      contributorsPanel.value?.updateContributors(githubUrl)
+    }
   })
 
   network?.on('deselectNode', () => {
@@ -464,5 +478,7 @@ const { isOpen } = storeToRefs(useSlide())
         </div>
       </Overlay>
     </UCard>
+
+    <ContributorsPanel ref="contributorsPanel" />
   </div>
 </template>
