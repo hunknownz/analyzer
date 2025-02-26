@@ -88,7 +88,7 @@ defineExpose({
                 {{ contributor.login }}
               </a>
               <p class="text-xs text-gray-500">
-                {{ contributor.contributions }} contributions
+                rating: {{ contributor.contributions }}
               </p>
             </div>
           </div>
