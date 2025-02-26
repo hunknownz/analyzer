@@ -5,12 +5,13 @@ const loading = ref(false)
 const currentRepo = ref('')
 
 // 接收 githubUrl 的更新
-const updateContributors = async (githubUrl: string) => {
-  if (!githubUrl) return
-  
+async function updateContributors(githubUrl: string) {
+  if (!githubUrl)
+    return
+
   loading.value = true
   currentRepo.value = githubUrl.split('/').slice(-2).join('/')
-  
+
   try {
     const hostname = window.location.hostname
     const response = await fetch(`http://${hostname}:5099/api/github/contributors?githubUrl=${encodeURIComponent(githubUrl)}`)
@@ -21,10 +22,12 @@ const updateContributors = async (githubUrl: string) => {
     if (success) {
       contributors.value = data
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to fetch contributors:', error)
     contributors.value = []
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -100,4 +103,4 @@ defineExpose({
       </div>
     </div>
   </div>
-</template> 
+</template>

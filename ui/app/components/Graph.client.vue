@@ -398,7 +398,8 @@ onMounted(async () => {
       else {
         githubUrl = pkgInfo.repository.url?.replace('git+https://github.com/', 'https://github.com/').replace('git://github.com', 'https://github.com')
       }
-    } else {
+    }
+    else {
       if (name === '@elizaos/core') {
         githubUrl = 'https://github.com/elizaOS/eliza'
       }
