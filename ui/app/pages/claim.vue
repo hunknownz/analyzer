@@ -14,6 +14,8 @@ const activeTab = ref('streams')
 const avatarUrl = ref('')
 const repos = ref<string[]>([])
 const receiverAddress = ref('')
+const numberRef = ref(null)
+let timer = null
 
 const isZeroAddress = computed(() => {
   return !receiverAddress.value || receiverAddress.value === '0x0000000000000000000000000000000000000000'
@@ -21,10 +23,20 @@ const isZeroAddress = computed(() => {
 
 onMounted(() => {
   fetchGithubUser()
+  const i = 0.0621600019
+  const s = 1741093025190
+  const r = (0.01 * 427 / 999) / (1000 * 60 * 60 * 1000)
+  timer = setInterval(() => {
+    numberRef.value.textContent = (i + ((Date.now() - s) * r)).toFixed(10)
+  }, 100)
   if (githubHandle.value) {
     fetchRepos(githubHandle.value)
     getReceiverContractReceiver(githubHandle.value)
   }
+})
+
+onUnmounted(() => {
+  clearInterval(timer)
 })
 
 async function fetchRepos(githubHandle: string) {
@@ -301,11 +313,11 @@ async function claim(githubHandle: string, index: number) {
               },
               {
                 key: 'actions',
-                label: 'Actions',
+                label: 'Stream',
               },
             ]"
           >
-            <template #actions-data="{ row }">
+            <!-- <template #actions-data="{ row }">
               <UButton
                 size="xs"
                 color="green"
@@ -313,6 +325,9 @@ async function claim(githubHandle: string, index: number) {
               >
                 Connect
               </UButton>
+            </template> -->
+            <template #actions-data="{ row }">
+              <span style="display: inline-block; min-width: 100px; text-align: right; font-family: monospace;" ref="numberRef" />
             </template>
           </UTable>
         </div>

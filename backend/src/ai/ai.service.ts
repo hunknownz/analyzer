@@ -13,7 +13,7 @@ export class AiService {
     }
 
     this.openai = new OpenAI({
-      baseURL: 'https://api.deepseek.com',
+      baseURL: 'https://api.siliconflow.cn/v1',
       apiKey,
     });
   }
@@ -24,7 +24,7 @@ export class AiService {
     const prompt = `Please provide a concise analysis of this GitHub repository: ${githubUrl}.`;
     const completion = await this.openai.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
-      model: 'deepseek-chat',
+      model: 'deepseek-ai/DeepSeek-V3',
     });
 
     const content = completion.choices[0].message.content;
